@@ -1,0 +1,6 @@
+*.o
+server
+compile_commands.json
+*_ServerLog
+log/
+logs/
