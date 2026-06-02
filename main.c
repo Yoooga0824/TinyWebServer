@@ -83,8 +83,7 @@ void show_error(int connfd, const char *info)
     close(connfd);
 }
 
-int main(int argc, char *argv[])
-{
+int main(int argc, char *argv[]) {
 #ifdef ASYNLOG
     Log::get_instance()->init("ServerLog", 2000, 800000, 8); //异步日志模型
 #endif
@@ -93,8 +92,7 @@ int main(int argc, char *argv[])
     Log::get_instance()->init("ServerLog", 2000, 800000, 0); //同步日志模型
 #endif
 
-    if (argc <= 1)
-    {
+    if (argc <= 1) {
         printf("usage: %s ip_address port_number\n", basename(argv[0]));
         return 1;
     }
@@ -105,16 +103,14 @@ int main(int argc, char *argv[])
 
     //创建数据库连接池
     connection_pool *connPool = connection_pool::GetInstance();
-    connPool->init("localhost", "root", "root", "qgydb", 3306, 8);
+    connPool->init("localhost", "root", "Cyj050824",
+         "yooogadb", 3306, 8);
 
     //创建线程池
     threadpool<http_conn> *pool = NULL;
-    try
-    {
+    try {
         pool = new threadpool<http_conn>(connPool);
-    }
-    catch (...)
-    {
+    } catch (...) {
         return 1;
     }
 
