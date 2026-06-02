@@ -1,0 +1,7 @@
+# Clangd configuration for this workspace.
+# Goal: keep header files (*.h) parsed as C++ even when clangd has to fallback.
+
+If:
+  PathMatch: ".*\\.h$"
+CompileFlags:
+  Add: ["-xc++"]

@@ -84,20 +84,26 @@ void show_error(int connfd, const char *info)
 }
 
 int main(int argc, char *argv[]) {
-#ifdef ASYNLOG
-    Log::get_instance()->init("ServerLog", 2000, 800000, 8); //异步日志模型
-#endif
+    printf("=== TinyWebServer starting... ===\n");
+    fflush(stdout);
 
-#ifdef SYNLOG
-    Log::get_instance()->init("ServerLog", 2000, 800000, 0); //同步日志模型
-#endif
+    #ifdef ASYNLOG
+        Log::get_instance()->init("ServerLog", 2000, 800000, 8); //异步日志模型
+    #endif
+
+    #ifdef SYNLOG
+        Log::get_instance()->init("ServerLog", 2000, 800000, 0); //同步日志模型
+    #endif
 
     if (argc <= 1) {
         printf("usage: %s ip_address port_number\n", basename(argv[0]));
         return 1;
     }
 
-    int port = atoi(argv[1]);
+    char *ip = argv[1];
+    int port = atoi(argv[2]);
+    printf("IP: %s, Port: %d\n", ip, port);
+    fflush(stdout);
 
     addsig(SIGPIPE, SIG_IGN);
 
@@ -105,6 +111,8 @@ int main(int argc, char *argv[]) {
     connection_pool *connPool = connection_pool::GetInstance();
     connPool->init("localhost", "root", "Cyj050824",
          "yooogadb", 3306, 8);
+    printf("Database connection pool initialized successfully.\n");
+    fflush(stdout);
 
     //创建线程池
     threadpool<http_conn> *pool = NULL;
