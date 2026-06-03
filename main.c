@@ -175,6 +175,7 @@ int main(int argc, char *argv[]) {
             if (sockfd == listenfd) {
                 struct sockaddr_in client_address;
                 socklen_t client_addrlength = sizeof(client_address);
+
 #ifdef listenfdLT
                 int connfd = accept(listenfd, (struct sockaddr *)&client_address, &client_addrlength);
                 if (connfd < 0) {
@@ -229,11 +230,11 @@ int main(int argc, char *argv[]) {
                 }
                 continue;
 #endif
+
             } else if (events[i].events & (EPOLLRDHUP | EPOLLHUP | EPOLLERR)) {
                 //服务器端关闭连接，移除对应的定时器
                 util_timer *timer = users_timer[sockfd].timer;
                 timer->cb_func(&users_timer[sockfd]);
-
                 if (timer) {
                     timer_lst.del_timer(timer);
                 }
