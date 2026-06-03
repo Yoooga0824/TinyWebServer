@@ -22,6 +22,10 @@
 #include "../lock/locker.h"
 #include "../CGImysql/sql_connection_pool.h"
 
+void addfd(int epollfd, int fd, bool one_shot);
+void removefd(int epollfd, int fd);
+int setnonblocking(int fd);
+
 class http_conn {
 public:
     static const int FILENAME_LEN = 200;

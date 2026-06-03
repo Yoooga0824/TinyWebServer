@@ -16,7 +16,7 @@
 #include "./log/log.h"
 #include "./CGImysql/sql_connection_pool.h"
 
-#define MAX_FD 65536           //最大文件描述符
+#define MAX_FD 65536           //最大文件描述符         
 #define MAX_EVENT_NUMBER 10000 //最大事件数
 #define TIMESLOT 5             //最小超时单位
 
@@ -25,11 +25,6 @@
 
 //#define listenfdET //边缘触发非阻塞
 #define listenfdLT //水平触发阻塞
-
-//这三个函数在http_conn.cpp中定义，改变链接属性
-extern int addfd(int epollfd, int fd, bool one_shot);
-extern int remove(int epollfd, int fd);
-extern int setnonblocking(int fd);
 
 //设置定时器相关参数
 static int pipefd[2];
