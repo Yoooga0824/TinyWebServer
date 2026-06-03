@@ -16,7 +16,7 @@
 #include "./log/log.h"
 #include "./CGImysql/sql_connection_pool.h"
 
-#define MAX_FD 65536           //最大文件描述符         
+#define MAX_FD 65536           //最大文件描述符
 #define MAX_EVENT_NUMBER 10000 //最大事件数
 #define TIMESLOT 5             //最小超时单位
 
@@ -172,19 +172,16 @@ int main(int argc, char *argv[]) {
             int sockfd = events[i].data.fd;
 
             //处理新到的客户连接
-            if (sockfd == listenfd)
-            {
+            if (sockfd == listenfd) {
                 struct sockaddr_in client_address;
                 socklen_t client_addrlength = sizeof(client_address);
 #ifdef listenfdLT
                 int connfd = accept(listenfd, (struct sockaddr *)&client_address, &client_addrlength);
-                if (connfd < 0)
-                {
+                if (connfd < 0) {
                     LOG_ERROR("%s:errno is:%d", "accept error", errno);
                     continue;
                 }
-                if (http_conn::m_user_count >= MAX_FD)
-                {
+                if (http_conn::m_user_count >= MAX_FD) {
                     show_error(connfd, "Internal server busy");
                     LOG_ERROR("%s", "Internal server busy");
                     continue;
@@ -205,16 +202,13 @@ int main(int argc, char *argv[]) {
 #endif
 
 #ifdef listenfdET
-                while (1)
-                {
+                while (1) {
                     int connfd = accept(listenfd, (struct sockaddr *)&client_address, &client_addrlength);
-                    if (connfd < 0)
-                    {
+                    if (connfd < 0) {
                         LOG_ERROR("%s:errno is:%d", "accept error", errno);
                         break;
                     }
-                    if (http_conn::m_user_count >= MAX_FD)
-                    {
+                    if (http_conn::m_user_count >= MAX_FD) {
                         show_error(connfd, "Internal server busy");
                         LOG_ERROR("%s", "Internal server busy");
                         break;
@@ -235,47 +229,33 @@ int main(int argc, char *argv[]) {
                 }
                 continue;
 #endif
-            }
-
-            else if (events[i].events & (EPOLLRDHUP | EPOLLHUP | EPOLLERR))
-            {
+            } else if (events[i].events & (EPOLLRDHUP | EPOLLHUP | EPOLLERR)) {
                 //服务器端关闭连接，移除对应的定时器
                 util_timer *timer = users_timer[sockfd].timer;
                 timer->cb_func(&users_timer[sockfd]);
 
-                if (timer)
-                {
+                if (timer) {
                     timer_lst.del_timer(timer);
                 }
             }
 
             //处理信号
-            else if ((sockfd == pipefd[0]) && (events[i].events & EPOLLIN))
-            {
+            else if ((sockfd == pipefd[0]) && (events[i].events & EPOLLIN)) {
                 int sig;
                 char signals[1024];
                 ret = recv(pipefd[0], signals, sizeof(signals), 0);
-                if (ret == -1)
-                {
+                if (ret == -1) {
                     continue;
-                }
-                else if (ret == 0)
-                {
+                } else if (ret == 0) {
                     continue;
-                }
-                else
-                {
-                    for (int i = 0; i < ret; ++i)
-                    {
-                        switch (signals[i])
-                        {
-                        case SIGALRM:
-                        {
+                } else {
+                    for (int i = 0; i < ret; ++i) {
+                        switch (signals[i]) {
+                        case SIGALRM: {
                             timeout = true;
                             break;
                         }
-                        case SIGTERM:
-                        {
+                        case SIGTERM: {
                             stop_server = true;
                         }
                         }
@@ -284,11 +264,9 @@ int main(int argc, char *argv[]) {
             }
 
             //处理客户连接上接收到的数据
-            else if (events[i].events & EPOLLIN)
-            {
+            else if (events[i].events & EPOLLIN) {
                 util_timer *timer = users_timer[sockfd].timer;
-                if (users[sockfd].read_once())
-                {
+                if (users[sockfd].read_once()) {
                     LOG_INFO("deal with the client(%s)", inet_ntoa(users[sockfd].get_address()->sin_addr));
                     Log::get_instance()->flush();
                     //若监测到读事件，将该事件放入请求队列
@@ -296,55 +274,43 @@ int main(int argc, char *argv[]) {
 
                     //若有数据传输，则将定时器往后延迟3个单位
                     //并对新的定时器在链表上的位置进行调整
-                    if (timer)
-                    {
+                    if (timer) {
                         time_t cur = time(NULL);
                         timer->expire = cur + 3 * TIMESLOT;
                         LOG_INFO("%s", "adjust timer once");
                         Log::get_instance()->flush();
                         timer_lst.adjust_timer(timer);
                     }
-                }
-                else
-                {
+                } else {
                     timer->cb_func(&users_timer[sockfd]);
-                    if (timer)
-                    {
+                    if (timer) {
                         timer_lst.del_timer(timer);
                     }
                 }
-            }
-            else if (events[i].events & EPOLLOUT)
-            {
+            } else if (events[i].events & EPOLLOUT) {
                 util_timer *timer = users_timer[sockfd].timer;
-                if (users[sockfd].write())
-                {
+                if (users[sockfd].write()) {
                     LOG_INFO("send data to the client(%s)", inet_ntoa(users[sockfd].get_address()->sin_addr));
                     Log::get_instance()->flush();
 
                     //若有数据传输，则将定时器往后延迟3个单位
                     //并对新的定时器在链表上的位置进行调整
-                    if (timer)
-                    {
+                    if (timer) {
                         time_t cur = time(NULL);
                         timer->expire = cur + 3 * TIMESLOT;
                         LOG_INFO("%s", "adjust timer once");
                         Log::get_instance()->flush();
                         timer_lst.adjust_timer(timer);
                     }
-                }
-                else
-                {
+                } else {
                     timer->cb_func(&users_timer[sockfd]);
-                    if (timer)
-                    {
+                    if (timer) {
                         timer_lst.del_timer(timer);
                     }
                 }
             }
         }
-        if (timeout)
-        {
+        if (timeout) {
             timer_handler();
             timeout = false;
         }
