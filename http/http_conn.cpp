@@ -539,9 +539,11 @@ bool http_conn::add_status_line(int status, const char *title) {
 }
 
 bool http_conn::add_headers(int content_len) {
-    add_content_length(content_len);
-    add_linger();
-    add_blank_line();
+    bool ok = true;
+    ok = ok && add_content_length(content_len);
+    ok = ok && add_linger();
+    ok = ok && add_blank_line();
+    return ok;
 }
 
 bool http_conn::add_content_length(int content_len) {

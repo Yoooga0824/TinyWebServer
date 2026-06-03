@@ -37,8 +37,7 @@ static sort_timer_lst timer_lst;
 static int epollfd = 0;
 
 //信号处理函数
-void sig_handler(int sig)
-{
+void sig_handler(int sig) {
     //为保证函数的可重入性，保留原来的errno
     int save_errno = errno;
     int msg = sig;
@@ -47,8 +46,7 @@ void sig_handler(int sig)
 }
 
 //设置信号函数
-void addsig(int sig, void(handler)(int), bool restart = true)
-{
+void addsig(int sig, void(handler)(int), bool restart = true) {
     struct sigaction sa;
     memset(&sa, '\0', sizeof(sa));
     sa.sa_handler = handler;
@@ -59,15 +57,13 @@ void addsig(int sig, void(handler)(int), bool restart = true)
 }
 
 //定时处理任务，重新定时以不断触发SIGALRM信号
-void timer_handler()
-{
+void timer_handler() {
     timer_lst.tick();
     alarm(TIMESLOT);
 }
 
 //定时器回调函数，删除非活动连接在socket上的注册事件，并关闭
-void cb_func(client_data *user_data)
-{
+void cb_func(client_data *user_data) {
     epoll_ctl(epollfd, EPOLL_CTL_DEL, user_data->sockfd, 0);
     assert(user_data);
     close(user_data->sockfd);
@@ -76,8 +72,7 @@ void cb_func(client_data *user_data)
     Log::get_instance()->flush();
 }
 
-void show_error(int connfd, const char *info)
-{
+void show_error(int connfd, const char *info) {
     printf("%s", info);
     send(connfd, info, strlen(info), 0);
     close(connfd);
@@ -109,8 +104,7 @@ int main(int argc, char *argv[]) {
 
     //创建数据库连接池
     connection_pool *connPool = connection_pool::GetInstance();
-    connPool->init("localhost", "tiny", "Cyj050824",
-         "yooogadb", 3306, 8);
+    connPool->init("localhost", "tiny", "Cyj050824", "yooogadb", 3306, 8);
     printf("Database connection pool initialized successfully.\n");
     fflush(stdout);
 
@@ -172,17 +166,14 @@ int main(int argc, char *argv[]) {
     bool timeout = false;
     alarm(TIMESLOT);
 
-    while (!stop_server)
-    {
+    while (!stop_server) {
         int number = epoll_wait(epollfd, events, MAX_EVENT_NUMBER, -1);
-        if (number < 0 && errno != EINTR)
-        {
+        if (number < 0 && errno != EINTR) {
             LOG_ERROR("%s", "epoll failure");
             break;
         }
 
-        for (int i = 0; i < number; i++)
-        {
+        for (int i = 0; i < number; i++) {
             int sockfd = events[i].data.fd;
 
             //处理新到的客户连接
