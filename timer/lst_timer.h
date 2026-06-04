@@ -29,6 +29,7 @@ public:
 class sort_timer_lst {
 public:
     sort_timer_lst() : head(NULL), tail(NULL) {}
+
     ~sort_timer_lst() {
         util_timer *tmp = head;
         while (tmp) {
@@ -37,26 +38,28 @@ public:
             tmp = head;
         }
     }
+
     void add_timer(util_timer *timer) {
-        if (!timer) {
-            return;
-        }
+        if (!timer) return;
+
         if (!head) {
             head = tail = timer;
             return;
         }
+
         if (timer->expire < head->expire) {
             timer->next = head;
             head->prev = timer;
             head = timer;
             return;
         }
+
         add_timer(timer, head);
     }
+
     void adjust_timer(util_timer *timer) {
-        if (!timer) {
-            return;
-        }
+        if (!timer) return;
+
         util_timer *tmp = timer->next;
         if (!tmp || (timer->expire < tmp->expire)) {
             return;
@@ -72,6 +75,7 @@ public:
             add_timer(timer, timer->next);
         }
     }
+    
     void del_timer(util_timer *timer) {
         if (!timer) {
             return;

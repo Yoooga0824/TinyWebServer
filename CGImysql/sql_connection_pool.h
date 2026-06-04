@@ -1,5 +1,5 @@
-#ifndef _CONNECTION_POOL_
-#define _CONNECTION_POOL_
+#ifndef CONNECTION_POOL  //原本是下划线开头，不太安全
+#define CONNECTION_POOL
 
 #include <stdio.h>
 #include <list>
@@ -14,12 +14,12 @@ using namespace std;
 
 class connection_pool {
 public:
-	MYSQL *GetConnection();				 //获取数据库连接
-	bool ReleaseConnection(MYSQL *conn); //释放连接
-	int GetFreeConn();					 //获取连接
-	void DestroyPool();					 //销毁所有连接
+	MYSQL *GetConnection();				 //从池中取出一个空闲连接。如果没有空闲连接，会等待（通过 sem 信号量）。
+	bool ReleaseConnection(MYSQL *conn); //将使用完的连接归还到池中，并增加 sem 计数。
+	int GetFreeConn();					 //返回当前空闲连接数（仅用于监控）。
+	void DestroyPool();					 //销毁所有连接，释放资源。通常在程序退出时调用。
 
-	//单例模式
+	//单例模式：获取全局唯一的连接池实例。
 	static connection_pool *GetInstance();
 
 	void init(string url, string User, string PassWord, string DataBaseName, int Port, unsigned int MaxConn); 

@@ -27,9 +27,9 @@
 #define listenfdLT //水平触发阻塞
 
 //设置定时器相关参数
-static int pipefd[2];
-static sort_timer_lst timer_lst;
-static int epollfd = 0;
+static int pipefd[2]; // pipefd 是一个管道的文件描述符数组。pipefd[0] 用于读，pipefd[1] 用于写。
+static sort_timer_lst timer_lst;  // sort_timer_lst 是一个升序链表定时器容器（定义在 lst_timer.h 中）
+static int epollfd = 0;  // epollfd 是 epoll 的文件描述符，用于监听事件。
 
 //信号处理函数
 void sig_handler(int sig) {
@@ -40,15 +40,15 @@ void sig_handler(int sig) {
     errno = save_errno;
 }
 
-//设置信号函数
-void addsig(int sig, void(handler)(int), bool restart = true) {
+//设置信号函数,并设定是否重启被信号打断的系统调用,默认为重启,使用sigaction设置信号处理函数比signal更可靠
+void addsig(int sig, void(*handler)(int), bool restart = true) {
     struct sigaction sa;
-    memset(&sa, '\0', sizeof(sa));
-    sa.sa_handler = handler;
-    if (restart)
-        sa.sa_flags |= SA_RESTART;
-    sigfillset(&sa.sa_mask);
-    assert(sigaction(sig, &sa, NULL) != -1);
+    memset(&sa, 0, sizeof(sa));  //将 sigaction 结构体 sa 的所有成员初始化为 0，确保没有未定义的行为。
+    sa.sa_handler = handler;  //将 sa 的 sa_handler 成员设置为传入的 handler 函数指针，这个函数将在信号发生时被调用。
+    if (restart)  
+        sa.sa_flags |= SA_RESTART;  //如果 restart 参数为 true，则设置 SA_RESTART 标志，表示在信号处理函数执行完毕后，系统调用会自动重启。
+    sigfillset(&sa.sa_mask);  //将 sa_mask 成员设置为包含所有信号的信号集，表示在信号处理函数执行期间，所有其他信号都会被阻塞。
+    assert(sigaction(sig, &sa, NULL) != -1);  //调用 sigaction 函数来安装信号处理程序，如果安装失败则触发断言。
 }
 
 //定时处理任务，重新定时以不断触发SIGALRM信号
@@ -77,10 +77,12 @@ int main(int argc, char *argv[]) {
     printf("=== TinyWebServer starting... ===\n");
     fflush(stdout);
 
+    #if defined(ASYNLOG) && defined(SYNLOG)
+        #error "Cannot define both ASYNLOG and SYNLOG"
+    #endif
     #ifdef ASYNLOG
         Log::get_instance()->init("ServerLog", 2000, 800000, 8); //异步日志模型
     #endif
-
     #ifdef SYNLOG
         Log::get_instance()->init("ServerLog", 2000, 800000, 0); //同步日志模型
     #endif
@@ -97,12 +99,12 @@ int main(int argc, char *argv[]) {
 
     addsig(SIGPIPE, SIG_IGN);
 
-    //创建数据库连接池
+    //创建数据库连接池，并初始化数据库连接池，参数依次是：主机地址、数据库用户名、数据库密码、数据库名、数据库端口号、连接池大小
     connection_pool *connPool = connection_pool::GetInstance();
     connPool->init("localhost", "tiny", "Cyj050824", "yooogadb", 3306, 8);
     printf("Database connection pool initialized successfully.\n");
     fflush(stdout);
-
+ 
     //创建线程池
     threadpool<http_conn> *pool = NULL;
     try {
