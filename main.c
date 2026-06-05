@@ -100,7 +100,7 @@ int main(int argc, char *argv[]) {
     addsig(SIGPIPE, SIG_IGN);
 
     //创建数据库连接池，并初始化数据库连接池，参数依次是：主机地址、数据库用户名、数据库密码、数据库名、数据库端口号、连接池大小
-    connection_pool *connPool = connection_pool::GetInstance();
+    connection_pool* connPool = connection_pool::GetInstance();
     connPool->init("localhost", "tiny", "Cyj050824", "yooogadb", 3306, 8);
     printf("Database connection pool initialized successfully.\n");
     fflush(stdout);

@@ -8,33 +8,33 @@
 class sem {
 public:
     sem() {
-        if (sem_init(&m_sem, 0, 0) != 0) {
+        if (sem_init(&m_sem, 0, 0) != 0)  //初始化一个 unnamed semaphore，初始值为 0，表示没有可用资源。
             throw std::exception();
-        }
-    }
+    }   
     sem(int num) {
-        if (sem_init(&m_sem, 0, num) != 0) {
+        if (sem_init(&m_sem, 0, num) != 0)  //初始化一个 unnamed semaphore，初始值为 num，表示有 num 个可用资源。
             throw std::exception();
-        }
     }
     ~sem() {
-        sem_destroy(&m_sem);
+        sem_destroy(&m_sem);   //销毁信号量，释放资源。
     }
+
     bool wait() {
-        return sem_wait(&m_sem) == 0;
+        return sem_wait(&m_sem) == 0;  //等待信号量，当信号量的值大于 0 时，减 1 并继续执行；当信号量的值为 0 时，阻塞等待直到有资源可用。
     }
     bool post() {
-        return sem_post(&m_sem) == 0;
+        return sem_post(&m_sem) == 0;  //释放信号量，增加 1，表示有一个资源可用。如果有线程在等待该信号量，则唤醒其中一个线程。
     }
 
 private:
-    sem_t m_sem;
+    sem_t m_sem;  //信号量,用于控制访问共享资源的线程数量。当一个线程调用 wait() 时，信号量的计数会减少；当一个线程调用 post() 时，计数会增加。
 };
+
 class locker {
 public:
     locker() {
         if (pthread_mutex_init(&m_mutex, NULL) != 0) {
-            throw std::exception();
+            throw std::runtime_error("mutex init failed");
         }
     }
     ~locker() {
@@ -58,8 +58,8 @@ class cond {
 public:
     cond() {
         if (pthread_cond_init(&m_cond, NULL) != 0) {
-            //pthread_mutex_destroy(&m_mutex);
-            throw std::exception();
+            pthread_mutex_destroy(&m_mutex);  //如果条件变量初始化失败，销毁互斥锁以释放资源。
+            throw std::runtime_error("condition variable init failed");
         }
     }
     ~cond() {
@@ -67,16 +67,16 @@ public:
     }
     bool wait(pthread_mutex_t *m_mutex) {
         int ret = 0;
-        //pthread_mutex_lock(&m_mutex);
+        pthread_mutex_lock(&m_mutex);  //在调用 pthread_cond_wait() 之前，必须先锁定与条件变量关联的互斥锁，以确保线程安全。这样可以防止多个线程同时访问共享资源，导致数据不一致或竞争条件。
         ret = pthread_cond_wait(&m_cond, m_mutex);
-        //pthread_mutex_unlock(&m_mutex);
+        pthread_mutex_unlock(&m_mutex);
         return ret == 0;
     }
     bool timewait(pthread_mutex_t *m_mutex, struct timespec t) {
         int ret = 0;
-        //pthread_mutex_lock(&m_mutex);
+        pthread_mutex_lock(&m_mutex);  //在调用 pthread_cond_timedwait() 之前，必须先锁定与条件变量关联的互斥锁，以确保线程安全。这样可以防止多个线程同时访问共享资源，导致数据不一致或竞争条件。
         ret = pthread_cond_timedwait(&m_cond, m_mutex, &t);
-        //pthread_mutex_unlock(&m_mutex);
+        pthread_mutex_unlock(&m_mutex);  //在调用 pthread_cond_timedwait() 之后，必须解锁与条件变量关联的互斥锁，以允许其他线程访问共享资源。这样可以防止死锁和资源竞争。
         return ret == 0;
     }
     bool signal() {
@@ -87,7 +87,6 @@ public:
     }
 
 private:
-    //static pthread_mutex_t m_mutex;
     pthread_cond_t m_cond;
 };
 #endif

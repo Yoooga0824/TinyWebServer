@@ -10,17 +10,17 @@
 
 using namespace std;
 
-connection_pool::connection_pool() {
+connection_pool::connection_pool() {  
 	this->CurConn = 0;
 	this->FreeConn = 0;
 }
 
-connection_pool *connection_pool::GetInstance() {
+connection_pool* connection_pool::GetInstance() {
 	static connection_pool connPool;
 	return &connPool;
 }
 
-//构造初始化
+//构造初始化,创建 MaxConn 个连接，并将它们放入连接池中。参数包括数据库连接信息和最大连接数。
 void connection_pool::init(string url, string User, string PassWord, string DBName, int Port, unsigned int MaxConn) {
 	this->url = url;
 	this->Port = Port;
@@ -28,9 +28,9 @@ void connection_pool::init(string url, string User, string PassWord, string DBNa
 	this->PassWord = PassWord;
 	this->DatabaseName = DBName;
 
-	lock.lock();
+	lock.lock();  //在初始化连接池时，首先获取锁以确保线程安全。这样可以防止多个线程同时初始化连接池，导致资源竞争和不一致的状态。
 	for (int i = 0; i < MaxConn; i++) {
-		MYSQL *con = NULL;
+		MYSQL* con = NULL;
 		con = mysql_init(con);
 
 		if (con == NULL) {
@@ -56,8 +56,8 @@ void connection_pool::init(string url, string User, string PassWord, string DBNa
 
 
 //当有请求时，从数据库连接池中返回一个可用连接，更新使用和空闲连接数
-MYSQL *connection_pool::GetConnection() {
-	MYSQL *con = NULL;
+MYSQL* connection_pool::GetConnection() {
+	MYSQL* con = NULL;
 
 	if (0 == connList.size())
 		return NULL;
@@ -77,7 +77,7 @@ MYSQL *connection_pool::GetConnection() {
 }
 
 //释放当前使用的连接
-bool connection_pool::ReleaseConnection(MYSQL *con) {
+bool connection_pool::ReleaseConnection(MYSQL* con) {
 	if (NULL == con)
 		return false;
 
@@ -98,9 +98,9 @@ void connection_pool::DestroyPool() {
 
 	lock.lock();
 	if (connList.size() > 0) {
-		list<MYSQL *>::iterator it;
+		list<MYSQL*>::iterator it;
 		for (it = connList.begin(); it != connList.end(); ++it) {
-			MYSQL *con = *it;
+			MYSQL* con = *it;
 			mysql_close(con);
 		}
 		CurConn = 0;
