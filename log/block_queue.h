@@ -114,7 +114,6 @@ public:
     bool push(const T &item) {
         m_mutex.lock();
         if (m_size >= m_max_size) {  //队列满了,等待消费者消费数据,唤醒消费者线程
-            m_cond.broadcast();
             m_mutex.unlock();
             return false;
         }

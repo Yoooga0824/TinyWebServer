@@ -81,6 +81,7 @@ void Log::write_log(int level, const char *format, ...) {
     struct tm *sys_tm = localtime(&t);
     struct tm my_tm = *sys_tm;
     char s[16] = {0};
+
     switch (level) {
     case 0:
         strcpy(s, "[debug]:");
@@ -92,7 +93,7 @@ void Log::write_log(int level, const char *format, ...) {
         strcpy(s, "[warn]:");
         break;
     case 3:
-        strcpy(s, "[erro]:");
+        strcpy(s, "[error]:");
         break;
     default:
         strcpy(s, "[info]:");
@@ -103,7 +104,7 @@ void Log::write_log(int level, const char *format, ...) {
     m_mutex.lock();
     m_count++;
 
-    if (m_today != my_tm.tm_mday || m_count % m_split_lines == 0) {  //每天的log文件不一样,或者当前文件行数满了,就需要新建一个log文件
+    if (m_today != my_tm.tm_mday || m_count == m_split_lines) {  //每天的log文件不一样,或者当前文件行数满了,就需要新建一个log文件
         
         char new_log[512] = {0};
         fflush(m_fp);

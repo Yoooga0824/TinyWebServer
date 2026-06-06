@@ -81,7 +81,7 @@ int main(int argc, char *argv[]) {
         #error "Cannot define both ASYNLOG and SYNLOG"
     #endif
     #ifdef ASYNLOG
-        Log::get_instance()->init("ServerLog", 2000, 800000, 8); //异步日志模型
+        Log::get_instance()->init("ServerLog", 2000, 800000, 5000); //异步日志模型
     #endif
     #ifdef SYNLOG
         Log::get_instance()->init("ServerLog", 2000, 800000, 0); //同步日志模型
