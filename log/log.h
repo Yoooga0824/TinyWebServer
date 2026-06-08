@@ -53,10 +53,10 @@ private:
     long long m_count;  //日志行数记录
     int m_today;        //因为按天分类,记录当前时间是那一天
     FILE *m_fp;         //打开log的文件指针
-    char *m_buf;
-    block_queue<string> *m_log_queue; //阻塞队列
+    char *m_buf;        //日志缓冲区,用于存储格式化后的日志内容
+    block_queue<string> *m_log_queue; //阻塞队列，用于存储日志内容
     bool m_is_async;                  //是否同步标志位
-    locker m_mutex;
+    locker m_mutex;                   //互斥锁，用于保护日志文件的写入
 };
 
 

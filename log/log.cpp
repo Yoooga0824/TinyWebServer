@@ -120,16 +120,16 @@ void Log::write_log(int level, const char *format, ...) {
         } else {
             snprintf(new_log, sizeof(new_log), "%s%s%s.%lld", dir_name, tail, log_name, m_count / m_split_lines);
         }
-        m_fp = fopen(new_log, "a");
+        m_fp = fopen(new_log, "a");  //打开新的log文件，append（追加）模式：文件不存在就创建，存在则在末尾追加，不覆盖旧内容
     }
  
     m_mutex.unlock();
 
-    va_list valst;
-    va_start(valst, format);
+    va_list valst;  //定义一个可变参数列表，用于存储格式化字符串中的参数
+    va_start(valst, format);  //初始化可变参数列表，将format作为第一个参数，valst作为第二个参数
 
-    string log_str;
-    m_mutex.lock();
+    string log_str;  //定义一个字符串，用于存储格式化后的日志内容
+    m_mutex.lock();  //锁定互斥锁，防止多个线程同时写入日志
 
     //写入的具体时间内容格式
     int n = snprintf(m_buf, 48, "%d-%02d-%02d %02d:%02d:%02d.%06ld %s ",
@@ -137,26 +137,25 @@ void Log::write_log(int level, const char *format, ...) {
                      my_tm.tm_hour, my_tm.tm_min, my_tm.tm_sec, now.tv_usec, s);
     
     int m = vsnprintf(m_buf + n, m_log_buf_size - 1, format, valst);
-    m_buf[n + m] = '\n';
-    m_buf[n + m + 1] = '\0';
-    log_str = m_buf;
+    m_buf[n + m] = '\n';  //添加换行符
+    m_buf[n + m + 1] = '\0';  //添加空字符
+    log_str = m_buf;  //将格式化后的日志内容存储到log_str中
 
     m_mutex.unlock();
 
     if (m_is_async && !m_log_queue->full()) {
-        m_log_queue->push(log_str);
+        m_log_queue->push(log_str);  //将格式化后的日志内容存储到阻塞队列中
     } else {
-        m_mutex.lock();
-        fputs(log_str.c_str(), m_fp);
+        m_mutex.lock(); 
+        fputs(log_str.c_str(), m_fp);  //将格式化后的日志内容写入到文件中
         m_mutex.unlock(); 
     }
 
-    va_end(valst);
+    va_end(valst);  //结束可变参数列表
 }
 
 void Log::flush(void) {
     m_mutex.lock();
-    //强制刷新写入流缓冲区
-    fflush(m_fp);
+    fflush(m_fp);  //将缓冲区中的内容写入到文件中
     m_mutex.unlock();
 }
