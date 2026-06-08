@@ -4,3 +4,6 @@ compile_commands.json
 *_ServerLog
 log/
 logs/
+./lock/Producer_Consumer.cpp
+./lock/Producer_Consumer
+./lock/test_cond

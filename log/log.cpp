@@ -102,16 +102,16 @@ void Log::write_log(int level, const char *format, ...) {
 
     //写入一个log，对m_count++, m_split_lines最大行数
     m_mutex.lock();
-    m_count++;
+    m_count++;  //每写入一个log，行数加1
 
-    if (m_today != my_tm.tm_mday || m_count == m_split_lines) {  //每天的log文件不一样,或者当前文件行数满了,就需要新建一个log文件
+    if (m_today != my_tm.tm_mday || m_count % m_split_lines == 0) {  //每天的log文件不一样,或者当前文件行数满了,就需要新建一个log文件
         
         char new_log[512] = {0};
-        fflush(m_fp);
-        fclose(m_fp);
-        char tail[64] = {0};
+        fflush(m_fp);  //强制刷新写入流缓冲区
+        fclose(m_fp);  //关闭当前文件
+        char tail[64] = {0};  //新log文件的时间部分,格式为年月日,比如2023_09_18_
        
-        snprintf(tail, sizeof(tail), "%d_%02d_%02d_", my_tm.tm_year + 1900, my_tm.tm_mon + 1, my_tm.tm_mday);
+        snprintf(tail, sizeof(tail), "%d_%02d_%02d_", my_tm.tm_year + 1900, my_tm.tm_mon + 1, my_tm.tm_mday);  //生成新的log文件的时间部分
        
         if (m_today != my_tm.tm_mday) {
             snprintf(new_log, sizeof(new_log), "%s%s%s", dir_name, tail, log_name);
@@ -148,7 +148,7 @@ void Log::write_log(int level, const char *format, ...) {
     } else {
         m_mutex.lock();
         fputs(log_str.c_str(), m_fp);
-        m_mutex.unlock();
+        m_mutex.unlock(); 
     }
 
     va_end(valst);
